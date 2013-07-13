@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 	{
 		COMio PORT(argv[1], 115200, ONESTOPBIT, 8, NOPARITY);
 
-		string test = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890$";
+		string test = "abcdefghijklmno$";
 
 		int error = 0;
 
@@ -28,18 +28,13 @@ int main(int argc, char* argv[])
 			PORT.readSerialPort(atoi(argv[3]));
 			PORT.getBuff(buff);
 
+			cout << endl;
+
 			string str(buff.begin(),buff.end());
 
-			for(int i = 0; i < str.size() || i < test.size(); i++)
-			{
-				if(str[i] != test[i])
-					error++;
-			}
+			cout << "The input is: " << test << endl;
+			cout << "The return is: " << str << endl;
 
-			error += strcmp(str.c_str(), test.c_str());
-
-			cout << str << endl;
-			cout << "The current error count is: " << error << endl;
 		}
 
 /*		fstream input;
