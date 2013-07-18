@@ -15,26 +15,38 @@ int main(int argc, char* argv[])
 	{
 		COMio PORT(argv[1], 115200, ONESTOPBIT, 8, NOPARITY);
 
-		string test = "abcdefghijklmno$";
+		char c[17];
+		for(int i = 0; i < 16; i++)
+		{
+			c[i] = 5+i;
+		}
+		c[16] = NULL;
+
+		cout << "The string test is this long: " << strlen(c) << endl;
+		
 
 		int error = 0;
 
 		while(1)
 		{
-			vector<char> buff;
+			vector<int> buff;
 
-			PORT.writeSerialPort(test);
+			PORT.writeSerialPort(c);
 	
 			PORT.readSerialPort(atoi(argv[3]));
 			PORT.getBuff(buff);
 
 			cout << endl;
 
-			string str(buff.begin(),buff.end());
+			cout << "The input is:  ";
+			for (int i = 0; i < strlen(c); i++)
+				cout << (unsigned)c[i] << " ";
+			cout << endl;
+			cout << "The return is: ";
+			for (vector<int>::iterator it = buff.begin(); it < buff.end(); it++)
+				cout << *it << " ";
 
-			cout << "The input is: " << test << endl;
-			cout << "The return is: " << str << endl;
-
+			cout << endl;
 		}
 
 /*		fstream input;

@@ -151,10 +151,10 @@ COMio::~COMio()
 	CloseHandle(hSerial);
 }
 
-int COMio::writeSerialPort(string write)
+int COMio::writeSerialPort(char* write)
 {
 	DWORD dwBytesWritten = 0;
-	if(!WriteFile(hSerial, write.c_str(), write.length(), &dwBytesWritten, NULL)){
+	if(!WriteFile(hSerial, write, strlen(write), &dwBytesWritten, NULL)){
 		//error occurred. Report to user.
 		cout << "Serial port write error, " << dwBytesWritten << " bytes written" << endl;
 		return -1;
@@ -176,7 +176,7 @@ int COMio::readSerialPort(int timeout)
 		return -1;
 	}
 
-    char cbuf;
+    unsigned char cbuf;
     DWORD dwIncomingReadSize;
 	count = 0;
 
@@ -201,7 +201,7 @@ int COMio::readSerialPort(int timeout)
 	return 0;
 }
 
-void COMio::getBuff(vector<char> &inBuff)
+void COMio::getBuff(vector<int> &inBuff)
 {
 	buff.swap(inBuff);
 }

@@ -11,12 +11,12 @@ class COMio
 public:
 	COMio(char port[], int baud, int stop, int bytes, int parity); //try to use given types, like NOPARITY, for the arguments
 	~COMio();
-	int writeSerialPort(string write);
+	int writeSerialPort(char* write);
 	int readSerialPort(int timeout); //timeout in seconds
-	void getBuff(vector<char> &inBuff);
+	void getBuff(vector<int> &inBuff);
 
 private:
 	HANDLE hSerial;
-	vector<char> buff;
+	vector<int> buff;
 	COMMTIMEOUTS timeouts;
 };
