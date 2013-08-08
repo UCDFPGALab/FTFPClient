@@ -151,10 +151,20 @@ COMio::~COMio()
 	CloseHandle(hSerial);
 }
 
-int COMio::writeSerialPort(char* write)
+int COMio::writeSerialPort(vector<unsigned char> input)
 {
+	//writes the vector to the board bit by bit
 	DWORD dwBytesWritten = 0;
-	if(!WriteFile(hSerial, write, strlen(write), &dwBytesWritten, NULL)){
+	int total = 0;
+	int size = sizeof(input[0]);
+	string arr;
+
+	for (vector<unsigned char>::iterator it = input.begin(); it < input.end(); it++)
+	{
+			arr.push_back(*it);
+	}
+
+	if(!WriteFile(hSerial, arr.c_str(), arr.length(), &dwBytesWritten, NULL)){
 		//error occurred. Report to user.
 		cout << "Serial port write error, " << dwBytesWritten << " bytes written" << endl;
 		return -1;
@@ -162,9 +172,10 @@ int COMio::writeSerialPort(char* write)
 	cout << dwBytesWritten << " bytes written to board" << endl;
 	return 0;
 }
+
 int COMio::readSerialPort(int timeout)
 {
-	DWORD dwEventMask;
+
 	int count = 0;
 
 	timeouts.ReadTotalTimeoutConstant=timeout; //500 msecond wait default
@@ -201,7 +212,7 @@ int COMio::readSerialPort(int timeout)
 	return 0;
 }
 
-void COMio::getBuff(vector<int> &inBuff)
+void COMio::getBuff(vector<unsigned char> &inBuff)
 {
 	buff.swap(inBuff);
 }
