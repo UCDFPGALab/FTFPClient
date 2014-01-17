@@ -1,40 +1,36 @@
 // AlgorithmDemonstrationClient.cpp : Defines the entry point for the console application.
+// TODO: Rewrite the opening and operation of serial ports with try/catch blocks instead of silly error codes
 
 #include "stdafx.h"
 #include "COMio.h" //restructure the COMio
+#include "../../../fastcal/fastcal/FastCalData.h"
 
 const int TOWRITE = 16;
 const int ROWS = 4;
 const int COLUMNS = 4;
-const int matrices = 3;
+const int matrices = 1;
 
 using namespace std;
 
-void read(vector<unsigned char> &vec, char* fname)
-{
-		fstream fs;
-		fs.open(fname, fstream::in);
-		int i;
+void read(vector <unsigned char> &vec, char* fname ) {
+	fstream fs;
+	fs.open(fname, fstream::in);
+	int i;
 	
-		while(fs >> i)
-		{
-			vec.push_back((unsigned char)i);
-		}
+	while (fs >> i) {
+		vec.push_back((unsigned char) i);
+	}
 }
 
-void matrix(unsigned char (&mat)[ROWS][COLUMNS], vector<unsigned char> &vec, int matrix)
-{
-	for(int i = 0; i < ROWS; i++)
-	{
-		for(int j = 0; j < COLUMNS; j++)
-		{
+void matrix(unsigned char (&mat)[ROWS][COLUMNS], vector<unsigned char> &vec, int matrix) {
+	for(int i = 0; i < ROWS; i++) {
+		for(int j = 0; j < COLUMNS; j++) {
 			mat[i][j] = vec.at((matrix-1)*(ROWS*COLUMNS) + (i*COLUMNS + j));
 		}
 	}
 }
 
-void alg(vector<unsigned char> &vec)
-{
+void alg(vector<unsigned char> &vec) {
 	fstream fs;
 	fs.open("correct_output.txt", fstream::out);
 
@@ -47,10 +43,8 @@ void alg(vector<unsigned char> &vec)
 	{
 		matrix(mat, vec, j+1);
 	
-		for(int row = 0; row < ROWS; row++)
-		{
-			for(int column = 0; column < COLUMNS; column++)
-			{
+		for (int row = 0; row < ROWS; row++) {
+			for (int column = 0; column < COLUMNS; column++) {
 				nw = (column != 0 && row != 0);
 				n = (row != 0);
 				ne = (column != COLUMNS-1 && row != 0);
@@ -73,21 +67,17 @@ void alg(vector<unsigned char> &vec)
 
 				fs << sum;
 				fs << ' ';
-			}
+			} //end columns
 			fs << '\n';
-		}
+		} //end rows
 		fs << '\n';
-	}
+	} //end matrices
 }
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]) {
 	if(argc != 4)
-	{
 		cout << "\nProgram usage:\nAlgorithmDemonstrationClient.exe [Port Name] [Input File] [Timeout (msec)]" << endl;
-	}
-	else //main body of program, only for testing the FPGA side of things right now
-	{
+	else { //main body of program, only for testing the FPGA side of things right now
 		COMio PORT(argv[1], 115200, ONESTOPBIT, 8, NOPARITY);
 
 		vector<unsigned char> buff;
@@ -105,22 +95,19 @@ int main(int argc, char* argv[])
 		fstream fs;
 		fs.open("fpga_output.txt", fstream::out);
 
-		for(vector<unsigned char>::iterator it = buff.begin(); it < buff.end(); it++)
-		{
+		for(vector<unsigned char>::iterator it = buff.begin(); it < buff.end(); it++) {
 			fs << (unsigned int)*it << ' ';
 			column++;
-			if (column == COLUMNS)
-			{
+			if (column == COLUMNS) {
 				column = 0;
 				row++;
 				fs << endl;
 			}
-			if (row == ROWS)
-			{
+			if (row == ROWS) {
 				fs << endl << endl;
 				row = 0;
 				column = 0;
-			}
+			} // 
 		}
 	}
 

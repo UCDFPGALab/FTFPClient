@@ -1,6 +1,8 @@
 // COMio.h : include file for custom COM io initialization and parameter setting
 
 #pragma once
+#ifndef _COMIO_H_
+#define _COMIO_H_
 
 #define SIZEOFPORT 20
 
@@ -20,7 +22,9 @@ public:
 	void getBuff(vector<unsigned char> &inBuff);
 
 private:
-	HANDLE hSerial;
-	vector<unsigned char> buff;
-	COMMTIMEOUTS timeouts;
+	HANDLE hSerial_;
+	vector<unsigned char> buff_;
+	COMMTIMEOUTS timeouts_;
 };
+
+#endif _COMIO_H_

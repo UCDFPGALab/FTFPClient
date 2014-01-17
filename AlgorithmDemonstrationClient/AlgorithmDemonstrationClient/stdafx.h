@@ -4,15 +4,13 @@
 //
 
 #pragma once
+#ifndef _STDAFX_H_
+#define _STDAFX_H_
 
 #include "targetver.h"
 
 #include <stdio.h>
 #include <tchar.h>
-
-
-
-// TODO: reference additional headers your program requires here
 
 #include <Windows.h> //system specific COM port IO functions from here
 
@@ -23,3 +21,5 @@
 #include <string>
 
 #define SIZEOFOUTPUT 1000
+
+#endif _STDAFX_H_

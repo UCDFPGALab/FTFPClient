@@ -1,5 +1,6 @@
-//COMio.cpp, implementation file for the COM functions declared in COMio.h
-//Some functionality, especially for parity and more complicated stuff, is missing
+// COMio.cpp, implementation file for the COM functions declared in COMio.h
+// Some functionality, especially for parity and more complicated stuff, is missing
+// TODO: Rewrite the opening and operation of serial ports with try/catch blocks instead of silly error codes
 
 #include "stdafx.h"
 #include "COMio.h"
@@ -11,25 +12,19 @@ COMio::COMio(char port[], int baud, int stop, int bytes, int parity)
 	wchar_t wtext[SIZEOFPORT];
 	mbstowcs_s(NULL, wtext, size_t(SIZEOFPORT), port, strlen(port)+1 );//Plus null
 
-	hSerial = CreateFile(wtext,
-				GENERIC_READ | GENERIC_WRITE,
-				0,
-				0,
-				OPEN_EXISTING,
-				FILE_ATTRIBUTE_NORMAL,
-				0);
+	hSerial_ = CreateFile(wtext,
+						  GENERIC_READ | GENERIC_WRITE,
+						  0,
+						  0,
+						  OPEN_EXISTING,
+						  FILE_ATTRIBUTE_NORMAL,
+						  0);
 
-	if(hSerial==INVALID_HANDLE_VALUE){
+	if(hSerial_==INVALID_HANDLE_VALUE) {
 		if(GetLastError()==ERROR_FILE_NOT_FOUND)
-		{
-			//serial port does not exist. Inform user.
-			cout << "Serial port does not exist: " << port << endl;
-		}
+			cout << "Serial port does not exist: " << port << endl; //serial port does not exist. Inform user.
 		else
-		{
-			//some other error occurred. Inform user.
-			cout << "Serial port \"other\" error: " << port << endl;
-		}
+			cout << "Serial port \"other\" error: " << port << endl; //some other error occurred. Inform user.
 		return;
 	}
 
@@ -37,14 +32,13 @@ COMio::COMio(char port[], int baud, int stop, int bytes, int parity)
 	DCB dcbSerialParams = {0};
 	dcbSerialParams.DCBlength=sizeof(dcbSerialParams);
 
-	if (!GetCommState(hSerial, &dcbSerialParams)) {
+	if (!GetCommState(hSerial_, &dcbSerialParams)) {
 		//error getting state
 		cout << "Serial port unreachable, state could not be read: " << port << endl;
 		return;
 	}
 	
-	switch(baud)
-	{
+	switch (baud) {
 		case 110 : 
 			dcbSerialParams.BaudRate=CBR_110;
 			break;
@@ -93,14 +87,11 @@ COMio::COMio(char port[], int baud, int stop, int bytes, int parity)
 	}
 	
 	if(bytes != 7 && bytes != 8)
-	{
-		cout << "WARNING: byte payload is not 7 or 8 bytes, what are you doing (Payload : " << bytes << " )" << endl;
-	}
+		cout << "WARNING: byte payload is not 7 or 8 bytes, what are you doing? (Payload : " << bytes << " )" << endl;
 
 	dcbSerialParams.ByteSize=bytes;
 
-	switch(stop)
-	{
+	switch (stop) {
 		case 0:
 			dcbSerialParams.StopBits=ONESTOPBIT;
 			break;
@@ -115,8 +106,7 @@ COMio::COMio(char port[], int baud, int stop, int bytes, int parity)
 			return;
 	}
 
-	switch(parity)
-	{
+	switch (parity) {
 		case NOPARITY:
 			dcbSerialParams.Parity=NOPARITY;
 			break;
@@ -125,46 +115,43 @@ COMio::COMio(char port[], int baud, int stop, int bytes, int parity)
 			return;
 	}
 
-
-	if(!SetCommState(hSerial, &dcbSerialParams)){
+	if (!SetCommState(hSerial_, &dcbSerialParams)) {
 		//error setting serial port state
 		cout << "Serial port unreachable, state could not be set: " << port << endl;
 		return;
 	}
 
-	//set the timeouts now to default values
-	timeouts.ReadIntervalTimeout=50;
-	timeouts.ReadTotalTimeoutConstant=0; //500 msecond wait default
-	timeouts.ReadTotalTimeoutMultiplier=50;
-	timeouts.WriteTotalTimeoutConstant=500;
-	timeouts.WriteTotalTimeoutMultiplier=100;
+	//set the timeouts_ now to default values
+	timeouts_.ReadIntervalTimeout=50;
+	timeouts_.ReadTotalTimeoutConstant=0; //500 msecond wait default
+	timeouts_.ReadTotalTimeoutMultiplier=50;
+	timeouts_.WriteTotalTimeoutConstant=500;
+	timeouts_.WriteTotalTimeoutMultiplier=100;
 
-	if(!SetCommTimeouts(hSerial, &timeouts))
-	{
-		//error occureed. Inform user
-		cout << "Serial port timeouts cannot be set" << endl;
-	}
+	if(!SetCommTimeouts(hSerial_, &timeouts_))
+		cout << "Serial port timeouts cannot be set" << endl; //error occured. Inform user
 }
 
-COMio::~COMio()
-{
-	CloseHandle(hSerial);
+
+
+COMio::~COMio() {
+	CloseHandle(hSerial_);
 }
 
-int COMio::writeSerialPort(vector<unsigned char> input)
-{
+
+
+int COMio::writeSerialPort(vector<unsigned char> input) {
 	//writes the vector to the board bit by bit
 	DWORD dwBytesWritten = 0;
 	int total = 0;
 	int size = sizeof(input[0]);
 	string arr;
 
-	for (vector<unsigned char>::iterator it = input.begin(); it < input.end(); it++)
-	{
+	for (vector<unsigned char>::iterator it = input.begin(); it < input.end(); it++) {
 			arr.push_back(*it);
 	}
 
-	if(!WriteFile(hSerial, arr.c_str(), arr.length(), &dwBytesWritten, NULL)){
+	if (!WriteFile(hSerial_, arr.c_str(), arr.length(), &dwBytesWritten, NULL)) {
 		//error occurred. Report to user.
 		cout << "Serial port write error, " << dwBytesWritten << " bytes written" << endl;
 		return -1;
@@ -178,12 +165,11 @@ int COMio::readSerialPort(int timeout)
 
 	int count = 0;
 
-	timeouts.ReadTotalTimeoutConstant=timeout; //500 msecond wait default
+	timeouts_.ReadTotalTimeoutConstant=timeout; //500 msecond wait default
 
-	if(!SetCommTimeouts(hSerial, &timeouts))
-	{
-		//error occureed. Inform user
-		cout << "Serial port timeouts cannot be set (in readSerialPort)" << endl;
+	if (!SetCommTimeouts(hSerial_, &timeouts_)) {
+		//error occured. Inform user
+		cout << "Serial port timeouts_ cannot be set (in readSerialPort)" << endl;
 		return -1;
 	}
 
@@ -191,28 +177,25 @@ int COMio::readSerialPort(int timeout)
     DWORD dwIncomingReadSize;
 	count = 0;
 
-	do
-	{
-		if(ReadFile(hSerial, &cbuf, 1, &dwIncomingReadSize, NULL) != 0)
-		{
-			if(dwIncomingReadSize > 0)
-			{
+	do {
+		if (ReadFile(hSerial_, &cbuf, 1, &dwIncomingReadSize, NULL) != 0) {
+			if (dwIncomingReadSize > 0) {
 				count++;
-				buff.push_back(cbuf);
+				buff_.push_back(cbuf);
             }
 		}
-		else
-		{
+		else {
 			cout << "Serial port unreachable, ReadFile failed (in readSerialPort)" << endl;
 		    return -1;
 		}
-	} while(dwIncomingReadSize > 0);
+	} while (dwIncomingReadSize > 0);
 	cout << count << " bytes read from board" << endl;
 
 	return 0;
 }
 
-void COMio::getBuff(vector<unsigned char> &inBuff)
-{
-	buff.swap(inBuff);
+
+
+void COMio::getBuff(vector<unsigned char> &inbuff) {
+	buff_.swap(inbuff);
 }
